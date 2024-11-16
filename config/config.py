@@ -10,4 +10,4 @@ dp = Dispatcher()
 api_key = 'SecretToken'
 url = "https://domo-dev.profintel.ru/tg-bot/check-tenant"
 
-db_name = ''
+db_name = 'database'

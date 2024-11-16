@@ -8,6 +8,8 @@ class Database:
         
         self.conn = sqlite3.connect(f'{self.db_name}.db')
         self.cursor = self.conn.cursor()
+        
+
 
 
     def GenerateTable(self, table_name, **kwargs):
@@ -29,6 +31,8 @@ class Database:
             ''')
 
             self.conn.commit()
+            
+            return True
 
         except Exception as e:
             print(f'[sql GenerateTable] {e}')
@@ -47,7 +51,7 @@ class Database:
 
         except sqlite3.Error as e:
             print(f"[sql GetOne] {e}")
-            return []
+            return False
 
 
     def GetAll(self, data, table_name, find_param, find_value):
@@ -62,10 +66,14 @@ class Database:
 
         except sqlite3.Error as e:
             print(f"[sql GetAll] {e}")
-            return []
+            return False
 
 
     def AddRow(self, table_name, **kwargs):
+        '''
+        True если все гуд
+        False если не все гуд
+        '''
         try:
             values = '?,'*(len(kwargs)-1) + '?'
 
@@ -77,6 +85,8 @@ class Database:
             self.cursor.execute(command, tuple(kwargs.values()))
             self.conn.commit()
 
+            return True
+        
         except Exception as e:
             print('[sql AddRow]', e)
             return False
