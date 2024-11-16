@@ -5,12 +5,8 @@ from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, InlineKe
 RouterHandler = Router()
 
 
-@RouterHandler.message(Command('get_doorphone'))
-async def getDoorphone(message:Message):
-    
-
-
-
+# @RouterHandler.message(Command('get_doorphone'))
+# async def getDoorphone(message:Message):
 
 # @RouterHandler.message(Command('start'))
 # async def aboba(message:Message):

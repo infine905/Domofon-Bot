@@ -1,1 +1,1 @@
-from .config import bot, dp, api_key, url
+from .config import bot, dp, api_key, url, db_name
