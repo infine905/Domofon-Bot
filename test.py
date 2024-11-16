@@ -1,15 +1,22 @@
-from config import api_key, url
 from requests import get, post
 import json
 
+#401 Bad Token
+#404 User not found
+
+url = "https://domo-dev.profintel.ru/tg-bot/check-tenant"
 
 data = {
-    "phone": 79604664266
+    'phone': 79604664266
 }
 
 headers = {
-    'x-api-key': api_key
+    'x-api-key': "SecretToken"
 }
 
-req = post(url=url, data=data, headers=headers)
-print(req.text)
+request = post(url=url, headers=headers, data=json.dumps(data))
+content = json.loads(request.content.decode())
+print(content)
+
+if request.status_code == 200:
+    tenant_id = content["tenant_id"]
