@@ -8,21 +8,27 @@ RouterReg = Router()
 
 
 @RouterReg.message(Command('start', 'register'))
-async def register(message:Message):
+async def sendContactFromUser(message:Message):
     
     contact_button = [[KeyboardButton(text="Отправить контакт", request_contact=True)]]
     keyboard = ReplyKeyboardMarkup(resize_keyboard=True, keyboard=contact_button)
     
-    text='Отправьте свой контакт'
+    text='Отправьте свой контакт.'
     
     await message.answer(text=text, reply_markup=keyboard)
-    
+
+
 @RouterReg.message(F.contact)
-async def register(message:Message):
-    print(message.contact)
+async def (message:Message):
     
+    # res = getTenantiD() 
+    res = 231312321 # tenant id
 
-
+    await message.answer(text='Вы успешно зарегестрировались')
+    
+    
+    
+    
 
 def ChekUser(phone):
     data = {
