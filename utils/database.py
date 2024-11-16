@@ -1,13 +1,19 @@
 import sqlite3
 from config import db_name
 
-
-class Database:
+class Database():
+    # Singleton Init
+    _instance = None
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+    
+    
     def __init__(self) -> None:
-        self.db_name = db_name
-        
-        self.conn = sqlite3.connect(f'{self.db_name}.db')
-        self.cursor = self.conn.cursor()
+        if not hasattr(self, "_initialized"):
+            self.connect = sqlite3.connect(f'{db_name}.db')
+            self.cursor = self.connect.cursor()
 
 
     def GenerateTable(self, table_name, **kwargs):
@@ -28,20 +34,20 @@ class Database:
             );
             ''')
 
-            self.conn.commit()
+            self.connect.commit()
 
         except Exception as e:
             print(f'[sql GenerateTable] {e}')
             return False
     
-
+    
     def GetOne(self, data, table_name, find_param, find_value):
         try:
             query = f'SELECT {data} FROM {table_name} WHERE {find_param} = {find_value}'
 
             self.cursor.execute(query)
             result = self.cursor.fetchone()
-            self.conn.commit()
+            self.connect.commit()
 
             return result
 
@@ -56,7 +62,7 @@ class Database:
 
             self.cursor.execute(query)
             results = self.cursor.fetchall()
-            self.conn.commit()
+            self.connect.commit()
             
             return results
 
@@ -75,7 +81,7 @@ class Database:
             '''
 
             self.cursor.execute(command, tuple(kwargs.values()))
-            self.conn.commit()
+            self.connect.commit()
 
         except Exception as e:
             print('[sql AddRow]', e)
