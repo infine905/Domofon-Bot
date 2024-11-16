@@ -4,7 +4,6 @@ from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, InlineKe
 
 RouterHandler = Router()
 
-
 # @RouterHandler.message(Command('start'))
 # async def aboba(message:Message):
 #     inl_kb = [
