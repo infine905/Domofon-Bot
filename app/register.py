@@ -3,9 +3,9 @@ from aiogram.filters import Command
 from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton
 from requests import get, post
 from config import api_key
+import json
 
 RouterReg = Router()
-
 
 @RouterReg.message(Command('start', 'register'))
 async def register(message:Message):
@@ -21,18 +21,21 @@ async def register(message:Message):
 async def register(message:Message):
     print(message.contact)
     
+def getTenantIdByPhone(phone : int) -> int:
+    url = "https://domo-dev.profintel.ru/tg-bot/check-tenant"
 
-
-
-def ChekUser(phone):
     data = {
         'phone': phone
     }
-    url = "https://domo-dev.profintel.ru/tg-bot/check-tenant"
-    
+
     headers = {
         'x-api-key': api_key
     }
+
+    request = post(url=url, headers=headers, data=json.dumps(data))
+
+    if request.status_code == 200:
+        content = json.loads(request.content.decode())
+        return content["tenant_id"]
     
-    req = post(url=url, headers=headers, data=data)
-    print(req)
+    return False
