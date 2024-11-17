@@ -5,16 +5,20 @@ from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, InlineKe
 from requests import get, post
 import json
 
-from .register import sendContactFromUser
 from utils import Database, generateKeyboard, Domofon
 
 
-async def getProfile(message:Message, is_start:bool = False) -> None:
+async def getProfile(message:Message, is_start:bool = False, user_id:int=None) -> None:
+    print("Началось снова")
+    if not user_id:
+         user_id = message.from_user.id
+    
     try:
-        tenant_id = Database().GetOne(data='tenant_id', table_name='Users', find_param='tg_id', find_value=message.from_user.id)
-    except:
-        await sendContactFromUser(message)
-        return
+        tenant_id = Database().GetOne(data='tenant_id', table_name='Users', find_param='tg_id', find_value=user_id)
+    except Exception as e:
+        print(e)
+        return 
+    
     
     inline_keyboard = [
         [InlineKeyboardButton(text='Мои квартиры', callback_data=f'get_apartment_{tenant_id}')],
@@ -24,7 +28,7 @@ async def getProfile(message:Message, is_start:bool = False) -> None:
     
     if is_start:
         await message.answer(text='Меню', reply_markup=keyboard)  
-        return 
+        return
     
     await message.edit_text(text='Меню', reply_markup=keyboard)
     

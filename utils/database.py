@@ -54,7 +54,7 @@ class Database():
             result = self.cursor.fetchone()
             self.connect.commit()
 
-            return result
+            return result[0]
 
         except sqlite3.Error as e:
             print(f"[sql GetOne] {e}")

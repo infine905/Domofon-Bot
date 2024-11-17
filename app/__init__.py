@@ -1,6 +1,7 @@
 from .callbacks import RouterCallback
-from .register import RouterReg
-from .profile import getProfile
+from .register import RouterReg, sendContactFromUser
+
+
 from aiogram import Router
 
 
