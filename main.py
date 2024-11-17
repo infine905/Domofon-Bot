@@ -1,5 +1,6 @@
 
 import app
+import os
 
 from config.config import dp, bot
 from asyncio import run
@@ -16,7 +17,8 @@ async def main():
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot, skip_updates=True)
 
-if __name__ == '__main__':      
+if __name__ == '__main__':
+    # allmediadir = os.path.join(os.path.dirname(os.path.abspath(__file)), 'all_media')
     now_time = strftime("%H:%M")
     print(f'Bot started at {now_time}')
     run(main()) 

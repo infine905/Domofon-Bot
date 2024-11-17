@@ -54,6 +54,9 @@ class Database():
             result = self.cursor.fetchone()
             self.connect.commit()
 
+            if result == None:
+                return False
+            
             return result[0]
 
         except sqlite3.Error as e:

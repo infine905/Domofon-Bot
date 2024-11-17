@@ -1,5 +1,5 @@
 from aiogram import Router
-from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, InputFile
+from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 
 from .profile import getProfile
 from utils import Domofon, Apartment, Tenant
@@ -9,7 +9,6 @@ from requests import get, post
 import json
 from io import BytesIO
 
-
 RouterCallback = Router()
 
 @RouterCallback.callback_query()
@@ -17,10 +16,6 @@ async def callbackHandler(call:CallbackQuery):
     data = call.data.split('_')
     
     action = data[0]
-    
-    if action == 'logout':
-        #кикнуть дауна 
-        return
     
     if action == 'home':
         await getProfile(call.message, user_id=call.from_user.id)
@@ -90,12 +85,12 @@ async def callbackHandler(call:CallbackQuery):
         tenant_id = data[2]
         domofon_id = data[3]
 
-        if not openDomofon(domofon_id=domofon_id, tenant_id=tenant_id, is_test=True):
+        if not openDomofon(domofon_id=domofon_id, tenant_id=tenant_id):
             mes_text = 'нт'
 
         await call.message.edit_text(text="Домофон открыт")
         
-        await sleep(5)
+        await sleep(3)
     
         inline_keyboard.append([
             InlineKeyboardButton(text=f'Открыть домофон', callback_data=f'get_open_{tenant_id}_{domofon_id}')

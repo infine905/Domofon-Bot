@@ -3,13 +3,7 @@ from aiogram.filters import Command
 from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
 
 from .profile import getProfile
-from config import api_key
-from utils import Database
-
-from requests import get, post
-from asyncio import sleep
-import json
-
+from utils import Database, getTenantIdByPhone
 
 RouterReg = Router()
 
@@ -47,32 +41,13 @@ async def Register(message:Message) -> None:
         await message.answer(text='Ты даун?🤔🤔🤔')
         return
 
-    '''   внести в бд не дауна)   🤔🤔🤔'''
     if not(Database().AddRow(table_name='users', tg_id=message.from_user.id, tenant_id=tenant_id, phone=phone)):
         text='Не получилось добавить'
         await message.answer(text=text)
         return
 
     await message.answer(text=f"Вы зарегистрировались", reply_markup=ReplyKeyboardRemove())
-    await sleep(5)
-    await getProfile(message=message)
+
+    await getProfile(message=message, is_start=True)
 
 
-def getTenantIdByPhone(phone : int) -> int|bool:
-    url = "https://domo-dev.profintel.ru/tg-bot/check-tenant"
-
-    data = {
-        'phone': phone
-    }
-
-    headers = {
-        'x-api-key': api_key
-    }
-
-    request = post(url=url, headers=headers, data=json.dumps(data))
-
-    if request.status_code == 200:
-        content = json.loads(request.content.decode())
-        return int(content["tenant_id"])
-    
-    return False
