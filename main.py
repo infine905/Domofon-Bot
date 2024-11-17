@@ -3,7 +3,7 @@ from asyncio import run
 from time import strftime 
 
 import app
-from utils import set_command, core
+from utils import set_command#, core
 
 async def main():
     dp.include_routers(
@@ -19,4 +19,4 @@ if __name__ == '__main__':
     print(f'Bot started at {now_time}')
     
     run(main()) 
-    core.run()
+    #core.run()

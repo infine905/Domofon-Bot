@@ -8,6 +8,8 @@ from asyncio import sleep
 
 RouterCallback = Router()
 
+base_text = '🫰 Выберите действие'
+
 @RouterCallback.callback_query()
 async def callbackHandler(call:CallbackQuery):
     data = call.data.split('_')
@@ -31,16 +33,16 @@ async def callbackHandler(call:CallbackQuery):
         for apartment in apartments:
             apartment_id = apartment.id
             apartment_name = apartment.name
-             
+            apartment_address = apartment.address
             inline_keyboard.append([
-                InlineKeyboardButton(text=f'{apartment_name}', callback_data=f'get_domofon_{tenant_id}_{apartment_id}')
+                InlineKeyboardButton(text=f'🏠 {apartment_address} кв. {apartment_name}', callback_data=f'get_domofon_{tenant_id}_{apartment_id}')
             ])
 
         else:
             inline_keyboard.append([
-                InlineKeyboardButton(text=f'🔙На главную', callback_data=f'home_{tenant_id}')
+                InlineKeyboardButton(text=f'‹ На главную', callback_data=f'home_{tenant_id}')
             ])
-            edit_text = 'Ваши квартиры'
+            edit_text = '🪴 *Ваши квартиры:*'
             
     elif get_data == 'domofon':
         tenant_id = data[2]
@@ -53,14 +55,14 @@ async def callbackHandler(call:CallbackQuery):
             domofon_id = domofon.id
             
             inline_keyboard.append([
-                InlineKeyboardButton(text=f'{domofon_name}', callback_data=f'get_door_{tenant_id}_{domofon_id}')
+                InlineKeyboardButton(text=f'📱 {domofon_name}', callback_data=f'get_door_{tenant_id}_{domofon_id}')
             ])
             
         else:
             inline_keyboard.append([
-                InlineKeyboardButton(text=f'🔙На главную', callback_data=f'home_{tenant_id}')
+                InlineKeyboardButton(text=f'‹ На главную', callback_data=f'home_{tenant_id}')
             ])
-            edit_text = 'Ваши домофоны'
+            edit_text = '🤙 *Ваши домофоны:*'
 
     elif get_data == 'door':
         tenant_id = data[2]
@@ -68,7 +70,7 @@ async def callbackHandler(call:CallbackQuery):
         
         inline_keyboard = returnDoorMenu(inline_keyboard=inline_keyboard, tenant_id=tenant_id, domofon_id=domofon_id)
         
-        edit_text = 'Выберите действие'
+        edit_text = base_text
 
     elif get_data == 'open':
         tenant_id = data[2]
@@ -76,24 +78,24 @@ async def callbackHandler(call:CallbackQuery):
         inline_keyboard = returnDoorMenu(inline_keyboard=inline_keyboard, tenant_id=tenant_id, domofon_id=domofon_id)
         
         if not openDomofon(domofon_id=domofon_id, tenant_id=tenant_id): #если домофон не открылся
-            edit_text = 'нт'
+            edit_text = '⛔ Домофон недоступен\nПопробуйте позже'
 
         if call.message.photo:                                          # если есть фотка в сообщении
             await call.message.delete()
-            message = await call.message.answer(text='Домофон открыт')
+            message = await call.message.answer(text='✅ Домофон открыт')
             keyboard = InlineKeyboardMarkup(inline_keyboard=inline_keyboard)
 
             await sleep(3)
 
-            await message.edit_text(text='Выберите действие', reply_markup=keyboard)
+            await message.edit_text(text=base_text, reply_markup=keyboard)
             return
 
         else:
-            await call.message.edit_text(text="Домофон открыт")
+            await call.message.edit_text(text='✅ Домофон открыт')
 
         await sleep(3)        
 
-        edit_text = 'Выберите действие'
+        edit_text = base_text
 
     elif get_data == 'img':
         tenant_id = data[2]
@@ -103,15 +105,15 @@ async def callbackHandler(call:CallbackQuery):
         if photo_url:
             inline_keyboard = returnDoorMenu(inline_keyboard=inline_keyboard, tenant_id=tenant_id, domofon_id=domofon_id)
             await call.message.edit_media(media=InputMediaPhoto(media=photo_url))
-            await call.message.edit_caption(caption='Выберете действие', reply_markup=InlineKeyboardMarkup(inline_keyboard=inline_keyboard))
+            await call.message.edit_caption(caption=base_text, reply_markup=InlineKeyboardMarkup(inline_keyboard=inline_keyboard))
             return
 
         else:
-            await call.message.answer(text='Камера недоступна')
+            await call.message.answer(text='⛔ Камера недоступна')
 
         returnDoorMenu(tenant_id, domofon_id)
 
-        edit_text = 'Выберите действие'
+        edit_text = base_text
 
     keyboard = InlineKeyboardMarkup(inline_keyboard=inline_keyboard)
     await call.answer()
@@ -120,12 +122,12 @@ async def callbackHandler(call:CallbackQuery):
 
 def returnDoorMenu(inline_keyboard:list, tenant_id:int, domofon_id:int):
     inline_keyboard.append([
-        InlineKeyboardButton(text=f'Открыть домофон', callback_data=f'get_open_{tenant_id}_{domofon_id}')
+        InlineKeyboardButton(text=f'🔓 Открыть домофон', callback_data=f'get_open_{tenant_id}_{domofon_id}')
     ])
     inline_keyboard.append([
-        InlineKeyboardButton(text=f'Получить фотографию', callback_data=f'get_img_{tenant_id}_{domofon_id}')
+        InlineKeyboardButton(text=f'📸 Получить фотографию', callback_data=f'get_img_{tenant_id}_{domofon_id}')
     ])
     inline_keyboard.append([
-        InlineKeyboardButton(text=f'🔙На главную', callback_data=f'home_{tenant_id}')
+        InlineKeyboardButton(text=f'‹ На главную', callback_data=f'home_{tenant_id}')
     ])
     return inline_keyboard
