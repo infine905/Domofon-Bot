@@ -108,8 +108,7 @@ class Database():
         try:
             command = f'''DELETE FROM {table_name} WHERE {param} = '{value}';'''
             self.cursor.execute(command)
-            
-            self.conn.commit()
+            self.connect.commit()
             return True
         
         except Exception as e:

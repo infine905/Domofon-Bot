@@ -22,10 +22,11 @@ async def sendContactFromUser(message:Message) -> None:
 @RouterReg.message(Command('restore'))
 async def sendContactFromUser(message:Message) -> None:
     if Database().GetOne(data='id', table_name='Users', find_param='tg_id', find_value=message.from_user.id):
-    
-        contact_button = [[KeyboardButton(text=text, request_contact=True)]]
-        keyboard = ReplyKeyboardMarkup(resize_keyboard=True, keyboard=contact_button)
-        await message.answer(text=text, reply_markup=keyboard)
+        Database().Delete(table_name='Users', param='tg_id', value=message.from_user.id)
+        
+    contact_button = [[KeyboardButton(text=text, request_contact=True)]]
+    keyboard = ReplyKeyboardMarkup(resize_keyboard=True, keyboard=contact_button)
+    await message.answer(text=text, reply_markup=keyboard)
 
 @RouterReg.message(F.contact)
 async def Register(message:Message) -> None:
