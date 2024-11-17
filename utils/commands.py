@@ -8,8 +8,8 @@ async def set_command(bot: Bot):
             description='Начать'
         ),
         BotCommand(
-            command='get_doorphone',
-            description='Получить список '
+            command='restore',
+            description='Сбросить данные'
         ),
     ]   
     await bot.set_my_commands(commands, scope=BotCommandScopeDefault())
