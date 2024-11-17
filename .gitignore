@@ -1,7 +1,9 @@
-.vs
-.vscode
-env
-/__pycache__/
-*/__pycache__/
-test.py
-temp/*
+__pycache__/
+**/__pycache__/
+
+.vs/
+.vscode/
+
+env/
+
+database.db

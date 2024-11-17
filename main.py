@@ -16,10 +16,12 @@ async def bot_main():
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot, skip_updates=True)
 
+
 async def fastapi_main():
     config = Config()
     config.bind = ["0.0.0.0:4123"] 
     await serve(fastapi_app, config)
+
 
 async def main():
     await asyncio.gather(bot_main(), fastapi_main())

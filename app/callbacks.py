@@ -32,7 +32,7 @@ async def callbackHandler(call:CallbackQuery):
         
         await call.bot.edit_message_text(chat_id=chatid, text=webhook_text, message_id=messageid)
         
-        await nice_sleep(time=3, text=webhook_text)
+        await nice_sleep(time=3, text=webhook_text, chat_id=chatid, call=call)
         
         await getProfile(message=call.message, is_start=True)
         return
