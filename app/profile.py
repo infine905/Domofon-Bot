@@ -21,5 +21,12 @@ async def getProfile(message:Message, is_start:bool = False, user_id:int=None) -
     if is_start:
         await message.answer(text='Меню', reply_markup=keyboard)  
         return
+
+    if message.photo != None:
+        await message.delete()
+        await message.answer(text='Меню', reply_markup=keyboard)
+        return
     
     await message.edit_text(text='Меню', reply_markup=keyboard)
+        
+    
