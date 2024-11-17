@@ -14,7 +14,7 @@ class Database():
         if not hasattr(self, "_initialized"):
             self.connect = sqlite3.connect(f'{db_name}.db')
             self.cursor = self.connect.cursor()
-
+            self.GenerateTable(table_name='Users', tg_id="INTEGER", tenant_id="INTEGER",phone='INTEGER')
 
     def GenerateTable(self, table_name, **kwargs):
         try:
@@ -43,7 +43,10 @@ class Database():
             return False
     
     
-    def GetOne(self, data, table_name, find_param, find_value):
+    def GetOne(self, data, table_name, find_param, find_value) -> str|bool:
+        '''
+        f'SELECT {data} FROM {table_name} WHERE {find_param} = {find_value}'
+        '''
         try:
             query = f'SELECT {data} FROM {table_name} WHERE {find_param} = {find_value}'
 
