@@ -141,7 +141,7 @@ def getDomofonImage(domofon_id:int, tenant_id:int, media_type:str="JPEG") -> Byt
             req_image = get(image_url_alt)
             if req_image.status_code == 200:
                 image_bytes = BytesIO(req_image.content)
-                image_bytes.name = "photo.jpg"
+                image_bytes.name = f"photo_{tenant_id}_{domofon_id}.jpg"
                 return image_bytes
     return None
 
