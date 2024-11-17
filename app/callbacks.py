@@ -113,9 +113,11 @@ async def callbackHandler(call:CallbackQuery):
         tenant_id = data[2]
         domofon_id = data[3]
         
-        image_bytes = getDomofonImage(domofon_id=domofon_id, tenant_id=tenant_id)
-        
-        await call.message.answer_photo(photo=image_bytes)
+        photo_url = getDomofonImage(domofon_id=domofon_id, tenant_id=tenant_id)
+        if photo_url:
+            await call.message.answer_photo(photo=photo_url)
+        else:
+            await call.message.answer(text='Камера недоступна')
 
         inline_keyboard.append([
             InlineKeyboardButton(text=f'Открыть домофон', callback_data=f'get_open_{tenant_id}_{domofon_id}')
@@ -206,7 +208,7 @@ def openDomofon(domofon_id:int, tenant_id:int, door_id:int = 0) -> bool:
     return False
 
 
-def getDomofonImage(domofon_id:int, tenant_id:int, media_type:str="JPEG") -> BytesIO | None:
+def getDomofonImage(domofon_id:int, tenant_id:int, media_type:str="JPEG") -> str | None:
     url = f"https://domo-dev.profintel.ru/tg-bot/domo.domofon/urlsOnType"
 
     params  = {
@@ -227,19 +229,22 @@ def getDomofonImage(domofon_id:int, tenant_id:int, media_type:str="JPEG") -> Byt
     }
 
     request = post(url=url, headers=headers, params=params, json=data)
-    if request.status_code == 200:
-        request_data = json.loads(request.content)
-        image_url = request_data[0].get("jpeg")
-        image_url_alt = request_data[0].get("alt_jpeg")
-        req_image = get(image_url)
-        if req_image.status_code == 200:
-            image_bytes = BytesIO(req_image.content)
-            image_bytes.name = "photo.jpg"
-            return image_bytes.read()
-        else:
-            req_image = get(image_url_alt)
-            if req_image.status_code == 200:
-                image_bytes = BytesIO(req_image.content)
-                image_bytes.name = f"photo_{tenant_id}_{domofon_id}.jpg"
-                return image_bytes.read()
+    
+    if request.status_code != 200:
+        return None
+    
+    request_data = json.loads(request.content)
+    
+    image_url = request_data[0].get("jpeg")
+    image_url_alt = request_data[0].get("alt_jpeg")
+    
+    req_image = get(image_url)
+    if req_image.status_code == 200:
+        return image_url
+    
+    req_image = get(image_url_alt)
+    if req_image.status_code == 200:
+        return  image_url_alt
+    
     return None
+
