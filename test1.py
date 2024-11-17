@@ -1,170 +1,36 @@
-from requests import post, get
-import json
+import requests
 from io import BytesIO
+from aiogram import Bot, Dispatcher, types
+from aiogram.filters import Command
+from asyncio import run
 
-class Tenant():
-    id = None
-    def __init__(self, id:int) -> None:
-        self.id = id
+# Укажите ваш токен Telegram-бота
+TOKEN = '7999931936:AAHrP6nu4ehudlRtuTlN5XlvIiHweLhLGYI'
+bot = Bot(token=TOKEN)
+dp = Dispatcher()
+
+# Команда для получения фото и отправки
+@dp.message(Command('send_photo'))
+async def send_photo(message: types.Message):
+    # Укажите ссылку на изображение
+    photo_url = 'https://cctv-streamer-11.profintel.ru/snapshot/image.jpg?st=PRvo6xXATEFbEMFOksW4EQ&e=1732032242&id=43'
+
+    try:
+        # Скачиваем фото
+        response = requests.get(photo_url)
+        response.raise_for_status()  # Проверяем на ошибки
+
+        with open(f'temp/temp_photo134233.jpg', 'wb') as f:
+            f.write(response.content)
+            await bot.send_photo(chat_id=message.chat.id, photo=f)
+            
+    except Exception as e:
+        await message.reply(f'Ошибка: {e}')
         
-    def __repr__(self):
-        return f"Tenant(id={self.id})"
-    
-class Apartment():
-    id = None
-    name = None
-    address = None
-    tenants = None
-       
-    def __init__(self, id:int, name:str, address:str, tenants:list[Tenant]) -> None:
-        self.id = id
-        self.name = name
-        self.address = address
-        self.tenants = tenants
-      
-    def __repr__(self):
-        return f"Apartment(id={self.id}, name='{self.name}', address='{self.address}', tenants={self.tenants})"
-    
-class Domofon():
-    id = None
-    name = None
-    address = None
-    def __init__(self, id:int, name:str, address:str) -> None:
-        self.id = id
-        self.name = name
-        self.address = address
-        
-    def __repr__(self):
-        return f"Domofon(id={self.id}, name='{self.name}', address='{self.address}')" 
-    
-def getTenantId(phone : int) -> int | None:
-    url = "https://domo-dev.profintel.ru/tg-bot/check-tenant"
-    data = {
-        'phone': phone
-    }
-    headers = {
-        'x-api-key': 'SecretToken'
-    }
+async def main():
+    await dp.start_polling(bot, skip_updates=True)
 
-    request = post(url=url, headers=headers, data=json.dumps(data))
+if __name__ == '__main__':
+    print(f'Bot started')
+    run(main())
 
-    if request.status_code == 200:
-        content = json.loads(request.content.decode())
-        return int(content["tenant_id"])
-    
-    return None
-
-def getApartments(tenant_id:int) -> list[Apartment] | None:
-    url = "https://domo-dev.profintel.ru/tg-bot/domo.apartment"
-    params  = {
-        "tenant_id": tenant_id
-    }
-    headers = {
-        'x-api-key': 'SecretToken'
-    }
-
-    request = get(url=url, headers=headers, params=params )
-    
-    if request.status_code != 200:
-        return None
-    
-    content = json.loads(request.content.decode())
-    apartments = []
-    for item in content:
-        id = item['id']
-        name = item['name']
-        address = item['location']['readable_address']
-        tenants_data = item.get('tenants', [])
-        tenants = [Tenant(t['id']) for t in tenants_data]
-        apartments.append(Apartment(id, name, address, tenants))
-    return apartments    
-    
-def getDofons(apartment_id:int, tenant_id:int) -> list[Domofon] | None:
-    url = f"https://domo-dev.profintel.ru/tg-bot/domo.apartment/{apartment_id}/domofon"
-    params  = {
-        "tenant_id" : tenant_id
-    }
-    headers = {
-        'x-api-key': 'SecretToken'
-    }
-
-    request = get(url=url, headers=headers, params=params )
-    print(request.status_code)
-    print(request.content.decode())
-    
-    if request.status_code != 200:
-        return None
-    
-    content = json.loads(request.content.decode())
-    
-    domofons = []
-    for item in content:
-        id = item['id']
-        name = item['name']
-        address = item['location']['readable_address']
-        print(id, name, address)
-        domofons.append(Domofon(id, name, address))
-        
-    return domofons  
-     
-def getDomofonImage(domofon_id:int, tenant_id:int, media_type:str="JPEG") -> BytesIO | None:
-    url = f"https://domo-dev.profintel.ru/tg-bot/domo.domofon/urlsOnType"
-    
-    params  = {
-        "tenant_id" : tenant_id
-    }
-    
-    data = {
-        "intercoms_id": [
-            domofon_id
-        ],
-        "media_type": [
-            "JPEG"
-        ]
-    }
-    
-    headers = {
-        'x-api-key': 'SecretToken'
-    }
-
-    request = post(url=url, headers=headers, params=params, json=data)
-    if request.status_code == 200:
-        request_data = json.loads(request.content)
-        image_url = request_data[0].get("jpeg")
-        image_url_alt = request_data[0].get("alt_jpeg")
-        req_image = get(image_url)
-        if req_image.status_code == 200:
-            image_bytes = BytesIO(req_image.content)
-            image_bytes.name = "photo.jpg"
-            return image_bytes
-        else:
-            req_image = get(image_url_alt)
-            if req_image.status_code == 200:
-                image_bytes = BytesIO(req_image.content)
-                image_bytes.name = f"photo_{tenant_id}_{domofon_id}.jpg"
-                return image_bytes
-    return None
-
-def openDomofon(domofon_id:int, tenant_id:int, door_id:int = 0) -> bool:
-    url = f"https://domo-dev.profintel.ru/tg-bot/domo.domofon/{domofon_id}/open"
-    params  = {
-        "tenant_id" : tenant_id
-    }
-    
-    data = {
-        "door_id" : door_id
-    }
-    
-    headers = {
-        'x-api-key': 'SecretToken'
-    }
-
-    request = post(url=url, headers=headers, params=params, json=data)
-    
-    if request.status_code == 200:
-        return True
-    
-    return False
-
-
-print(getDomofonImage(36, 22051))
