@@ -1,7 +1,12 @@
 from aiogram import Router
-from aiogram.types import CallbackQuery
+from aiogram.types import CallbackQuery, Message, InlineKeyboardButton, InlineKeyboardMarkup
 
-from utils import Domofon, Apartment
+from .profile import getProfile
+from utils import Domofon, Apartment, Tenant
+
+from asyncio import sleep
+from requests import get, post
+import json
 
 RouterCallback = Router()
 
@@ -15,22 +20,105 @@ async def callbackHandler(call:CallbackQuery):
         #кикнуть дауна 
         return
     
+    if action == 'home':
+        await getProfile(call.message, user_id=call.from_user.id)
+        return
+
     #тут action не может быть равен ничему кроме "get"
         
-    get_data = data[1]
-    tenant_id = data[2]
-    
+    get_data = data[1]  
+    inline_keyboard=[]
     
     if get_data == 'apartment':
-        apartment = getApartments(tenant_id=tenant_id)
+        tenant_id = int(data[2])
         
-        for i in apartment:
-            apartment_id = A
+        apartments = getApartments(tenant_id=tenant_id)
+        
+        for apartment in apartments:
+            apartment_id = apartment.id
+            apartment_name = apartment.name
             
             
+            inline_keyboard.append([
+                InlineKeyboardButton(text=f'{apartment_name}', callback_data=f'get_domofon_{tenant_id}_{apartment_id}')
+            ])
+
+        else:
+            inline_keyboard.append([
+                InlineKeyboardButton(text=f'На главную', callback_data=f'home_{tenant_id}')
+            ])
+            mes_text = 'Ваши квартиры'
+            
+    elif get_data == 'domofon':
+        tenant_id = data[2]
+        apartment_id = data[3]
+        
+        domofons = getDomofons(apartment_id=apartment_id, tenant_id=tenant_id)
+        
+        for domofon in domofons:
+            domofon_name = domofon.name
+            domofon_id = domofon.id
+            
+            inline_keyboard.append([
+                InlineKeyboardButton(text=f'{domofon_name}', callback_data=f'get_door_{tenant_id}_{domofon_id}')
+            ])
+            
+        else:
+            inline_keyboard.append([
+                InlineKeyboardButton(text=f'На главную', callback_data=f'home_{tenant_id}')
+            ])
+            mes_text = 'Ваши домофоны'
+
+    elif get_data == 'door':
+        tenant_id = data[2]
+        domofon_id = data[3]
+        
+        inline_keyboard.append([
+            InlineKeyboardButton(text=f'Открыть домофон', callback_data=f'get_open_{tenant_id}_{domofon_id}')
+        ])
+        inline_keyboard.append([
+            InlineKeyboardButton(text=f'Получить фотографию', callback_data=f'get_img_{tenant_id}_{domofon_id}')
+        ])
+        inline_keyboard.append([
+            InlineKeyboardButton(text=f'На главную', callback_data=f'home_{tenant_id}')
+        ])
+        mes_text = 'Выберите действие'
+
+    elif get_data == 'open':
+        tenant_id = data[2]
+        domofon_id = data[3]
+
+        if not openDomofon(domofon_id=domofon_id, tenant_id=tenant_id, is_test=True):
+            mes_text = 'нт'
+
+        await call.message.edit_text(text="Домофон открыт")
+        
+        await sleep(5)
+    
+        inline_keyboard.append([
+            InlineKeyboardButton(text=f'Открыть домофон', callback_data=f'get_open_{tenant_id}_{domofon_id}')
+        ])
+        inline_keyboard.append([
+            InlineKeyboardButton(text=f'Получить фотографию', callback_data=f'get_img_{tenant_id}_{domofon_id}')
+        ])
+        inline_keyboard.append([
+            InlineKeyboardButton(text=f'На главную', callback_data=f'home_{tenant_id}')
+        ])
+        mes_text = 'Выберите действие'
+            
+    
+    elif get_data == 'img':
+        tenant_id = data[2]
+        domofon_id = data[3]
+        
+        
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=inline_keyboard)
+    await call.answer()
+    await call.message.edit_text(text=mes_text, reply_markup=keyboard)
             
 
-def getDofons(apartment_id:int, tenant_id:int) -> list[Domofon] | None:
+def getDomofons(apartment_id:int, tenant_id:int) -> list[Domofon] | None:
     url = f"https://domo-dev.profintel.ru/tg-bot/domo.apartment/{apartment_id}/domofon"
     params  = {
         "tenant_id" : tenant_id
@@ -40,8 +128,6 @@ def getDofons(apartment_id:int, tenant_id:int) -> list[Domofon] | None:
     }
 
     request = get(url=url, headers=headers, params=params )
-    print(request.status_code)
-    print(request.content.decode())
     
     if request.status_code != 200:
         return None
@@ -53,9 +139,8 @@ def getDofons(apartment_id:int, tenant_id:int) -> list[Domofon] | None:
         id = item['id']
         name = item['name']
         address = item['location']['readable_address']
-        print(id, name, address)
         domofons.append(Domofon(id, name, address))
-        
+    return domofons
         
 def getApartments(tenant_id:int) -> list[Apartment] | None:
     url = "https://domo-dev.profintel.ru/tg-bot/domo.apartment"
@@ -80,3 +165,29 @@ def getApartments(tenant_id:int) -> list[Apartment] | None:
         tenants_data = item.get('tenants', [])
         tenants = [Tenant(t['id']) for t in tenants_data]
         apartments.append(Apartment(id, name, address, tenants))
+    return apartments 
+
+def openDomofon(domofon_id:int, tenant_id:int, door_id:int = 0, is_test:bool=False) -> bool:
+    url = f"https://domo-dev.profintel.ru/tg-bot/domo.domofon/{domofon_id}/open"
+    data  = {
+        "tenant_id" : tenant_id
+    }
+    
+    json_data = {
+        "door_id" : door_id
+    }
+    
+    headers = {
+        'x-api-key': 'SecretToken'
+    }
+
+    if is_test:
+        return True
+    
+    request = post(url=url, headers=headers, params=data, json=json_data)
+    
+    if request.status_code == 200:
+        return True
+    
+    return False
+

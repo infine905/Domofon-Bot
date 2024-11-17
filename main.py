@@ -1,7 +1,6 @@
 
 import app
 
-import app
 from config.config import dp, bot
 from asyncio import run
 from time import strftime 
