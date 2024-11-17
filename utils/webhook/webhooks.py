@@ -34,10 +34,8 @@ async def handle_get(
 # Обработка POST запроса
 @fastapi_app.post("/call_domofon/")
 async def handle_post(data: RequestModel) -> ReturnModel:
-    print("началось")
-    await webhookHandler(tenant_id=data.tenant_id, domofon_id=data.domofon_id, apartment_id=data.apartment_id)
-    print("заввершилось")
-    
+    for tenant in data.tenant_id:
+        await webhookHandler(tenant_id=tenant, domofon_id=data.domofon_id, apartment_id=data.apartment_id)   
     return {
         "status": "success",
     }
