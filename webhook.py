@@ -1,8 +1,8 @@
+import asyncio
 from pydantic import BaseModel
 from fastapi import FastAPI, Query
 from hypercorn.asyncio import serve
 from hypercorn.config import Config
-import asyncio
 
 fastapi_app = FastAPI()
 
