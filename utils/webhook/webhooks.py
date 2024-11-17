@@ -22,10 +22,11 @@ class ReturnModel(BaseModel):
 # Обработка GET запроса
 @fastapi_app.get("/call_domofon/")
 async def handle_get(
-    tenant_id: list[int] = Query(..., description="ID жильца"),
+    tenant_id: int = Query(..., description="ID жильца"),
     domofon_id: int = Query(..., description="ID домофона"),
     apartment_id: int = Query(..., description="ID квартиры")
 ):
+    await webhookHandler(tenant_id=tenant_id, domofon_id=domofon_id, apartment_id=apartment_id)   
     return {
         "status": "success",
     }
