@@ -1,2 +1,2 @@
-from .webhook import core
-from .handler_webhook import webhookHandler
+from .webhook import fastapi_app
+# from .handler_webhook import webhookHandler

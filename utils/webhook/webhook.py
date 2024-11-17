@@ -1,29 +1,51 @@
-from flask import Flask, request, jsonify
+from pydantic import BaseModel
+from fastapi import FastAPI, Query
+from hypercorn.asyncio import serve
+from hypercorn.config import Config
+import asyncio
+
 from .handler_webhook import webhookHandler
 
-core = Flask(__name__)
+fastapi_app = FastAPI()
 
-@core.route('/', methods=['GET', 'POST'])
-def process_request():
-    if request.method == 'GET':
-        tenant_id = request.args.get('tenant_id')
-        domofon_id = request.args.get('domofon_id')
-        apartment_id = request.args.get('apartment_id')
-        
-    elif request.method == 'POST':
-        data = request.json
-        tenant_id = data.get('tenant_id') if data else None
-        domofon_id = data.get('domofon_id') if data else None
-        apartment_id = data.get('apartment_id') if data else None
-        
-    if not domofon_id or not tenant_id or not apartment_id:
-        return jsonify({'message': 'Missing arguments, tenant_id, domofon_id and apartment_id are required'}), 400
+# Модель данных для POST запросов
+class RequestModel(BaseModel):
+    tenant_id: list[int]
+    domofon_id: int
+    apartment_id: int
     
+class ReturnModel(BaseModel):
+    status: str
     
-    webhookHandler(tenant_id, domofon_id, apartment_id)
-    
-    return jsonify({'message': 'Request processed successfully'}), 200
+# Обработка GET запроса
+@fastapi_app.get("/call_domofon/")
+async def handle_get(
+    tenant_id: list[int] = Query(..., description="ID жильца"),
+    domofon_id: int = Query(..., description="ID домофона"),
+    apartment_id: int = Query(..., description="ID квартиры")
+):
+    return {
+        "status": "success",
+    }
 
-if __name__ == '__main__':
-    core.run(debug=False)
-    #менять в main.py
+
+# Обработка POST запроса
+@fastapi_app.post("/call_domofon/")
+async def handle_post(data: RequestModel) -> ReturnModel:
+    
+    print("началось")
+    webhookHandler(tenant_id=data.tenant_id, domofon_id=data.domofon_id, apartment_id=data.apartment_id)
+    print("заввершилось")
+    
+    return {
+        "status": "success",
+    }
+
+
+def fastapi_main():
+    config = Config()
+    config.bind = ["0.0.0.0:4123"] 
+    asyncio.run(serve(fastapi_app, config))
+
+if __name__ == "__main__":
+    fastapi_main()

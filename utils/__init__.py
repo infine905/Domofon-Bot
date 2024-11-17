@@ -3,4 +3,4 @@ from .database import Database
 from .FastApi import *
 from .structs import *
 
-#from webhook import core, webhookHandler
+from webhook import fastapi_app#, webhookHandler
