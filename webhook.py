@@ -21,4 +21,4 @@ def process_request():
     return jsonify({'message': 'Request processed successfully'}), 200
 
 if __name__ == '__main__':
-    app.run(debug=False, port=4123, host="0.0.0.0")
+    app.run(debug=False)
