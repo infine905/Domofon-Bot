@@ -6,6 +6,8 @@ import asyncio
 
 from .handler_webhook import webhookHandler
 
+print("aboba")
+
 fastapi_app = FastAPI()
 
 # Модель данных для POST запросов
@@ -32,9 +34,8 @@ async def handle_get(
 # Обработка POST запроса
 @fastapi_app.post("/call_domofon/")
 async def handle_post(data: RequestModel) -> ReturnModel:
-    
     print("началось")
-    webhookHandler(tenant_id=data.tenant_id, domofon_id=data.domofon_id, apartment_id=data.apartment_id)
+    await webhookHandler(tenant_id=data.tenant_id, domofon_id=data.domofon_id, apartment_id=data.apartment_id)
     print("заввершилось")
     
     return {
@@ -45,7 +46,7 @@ async def handle_post(data: RequestModel) -> ReturnModel:
 def fastapi_main():
     config = Config()
     config.bind = ["0.0.0.0:4123"] 
-    asyncio.run(serve(fastapi_app, config))
+    return serve(fastapi_app, config)
 
 if __name__ == "__main__":
     fastapi_main()
