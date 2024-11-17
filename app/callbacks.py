@@ -20,11 +20,28 @@ async def callbackHandler(call:CallbackQuery):
         await getProfile(call.message, user_id=call.from_user.id)
         return
 
-    #тут action не может быть равен ничему кроме "get"
+    if action == 'webhook':
+        get_data = data[1]
+        tenant_id = data[2]
+        domofon_id = data[3]
+        apartment_id = data[4]
+        messageid = data[5]
+        chatid = data[6]
         
+        webhook_text = '123'
+        
+        await call.bot.edit_message_text(chat_id=chatid, text=webhook_text, message_id=messageid)
+        
+        await nice_sleep(time=3, text=webhook_text)
+        
+        await getProfile(message=call.message, is_start=True)
+        return
+        
+    #тут action не может быть равен ничему кроме "get"
+
     get_data = data[1]  
     inline_keyboard=[]
-    
+
     if get_data == 'apartment':
         tenant_id = int(data[2])
         
@@ -43,7 +60,7 @@ async def callbackHandler(call:CallbackQuery):
                 InlineKeyboardButton(text=f'‹ На главную', callback_data=f'home_{tenant_id}')
             ])
             edit_text = '🪴 *Ваши квартиры:*'
-            
+
     elif get_data == 'domofon':
         tenant_id = data[2]
         apartment_id = data[3]
@@ -131,3 +148,32 @@ def returnDoorMenu(inline_keyboard:list, tenant_id:int, domofon_id:int):
         InlineKeyboardButton(text=f'‹ На главную', callback_data=f'home_{tenant_id}')
     ])
     return inline_keyboard
+
+
+async def nice_sleep(time:int, text:str, chat_id, call:CallbackQuery):
+    '''
+    param: time in seconds
+    '''
+    
+    digits_with_emojis = (
+    (0, "0️⃣"),  # Ноль
+    (1, "1️⃣"),  # Один
+    (2, "2️⃣"),  # Два
+    (3, "3️⃣"),  # Три
+    (4, "4️⃣"),  # Четыре
+    (5, "5️⃣"),  # Пять
+    (6, "6️⃣"),  # Шесть
+    (7, "7️⃣"),  # Семь
+    (8, "8️⃣"),  # Восемь
+    (9, "9️⃣")   # Девять
+)
+    try:
+        for i in range(1, time+1):
+            await sleep(1)
+            await_text = f'{text} {digits_with_emojis[i][1]}'
+            await call.message.edit_text(text=await_text)
+        
+        return True
+    except Exception as e:
+        print(e)
+        return False
