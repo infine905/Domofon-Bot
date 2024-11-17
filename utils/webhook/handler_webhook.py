@@ -1,6 +1,6 @@
 
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
-from utils import Database, getApartments, getDomofons
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
+from utils import Database, getApartments, getDomofons, getDomofonImage
 from ..helpers import Text
 from config import bot
 
@@ -26,7 +26,8 @@ async def webhookHandler(tenant_id:int, domofon_id:int, apartment_id:int) -> boo
     else:
         return False, "The intercom is not included in the apartment"
     
-    answer_text = f'>🏠 Адрес: {Text(apartment_name)} \n>📲 Домофон: {Text(domofon_name)} \n☎️ Вам поступил звонок'
+    answer_text = f'☎️ Вам поступил звонок \n>🏠 Адрес: {Text(apartment_name)} \n>📲 Домофон: {Text(domofon_name)} '
+    photo_url = getDomofonImage(domofon_id=domofon_id, tenant_id=tenant_id)
     
     message = await bot.send_message(chat_id=int(chat_id), text=answer_text)
     
@@ -36,7 +37,8 @@ async def webhookHandler(tenant_id:int, domofon_id:int, apartment_id:int) -> boo
         [InlineKeyboardButton(text='Открыть', callback_data=f'webhook_open_{tenant_id}_{domofon_id}_{apartment_id}_{messageid}_{chat_id}')],
         [InlineKeyboardButton(text='Закрыть', callback_data='delete')]
     ]
-    
-    await message.edit_text(text=answer_text, reply_markup=InlineKeyboardMarkup(inline_keyboard=inline_keyboard))
+    #text=answer_text,
+    await message.edit_media(media=InputMediaPhoto(media=photo_url))
+    await message.edit_caption(caption=answer_text, reply_markup=InlineKeyboardMarkup(inline_keyboard=inline_keyboard))
     
     return True, "Query send success"

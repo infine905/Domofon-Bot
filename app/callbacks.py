@@ -14,6 +14,7 @@ async def callbackHandler(call:CallbackQuery):
     data = call.data.split('_')
     
     action = data[0]
+    inline_keyboard=[]
     
     if action == 'delete':
         await call.message.delete()
@@ -31,6 +32,16 @@ async def callbackHandler(call:CallbackQuery):
         messageid = data[5]
         chatid = data[6]
         
+        if call.message.photo:                                          # если есть фотка в сообщении
+            await call.message.delete()
+            message = await call.message.answer(text='✅ Домофон открыт')
+            keyboard = InlineKeyboardMarkup(inline_keyboard=inline_keyboard)
+
+            await nice_sleep(time=3, text='✅ Домофон открыт', message=message, is_del=True)
+            
+            # await message.edit_text(text=base_text, reply_markup=keyboard)
+            return
+        
         webhook_text = '✅ Домофон открыт'
         
         await call.bot.edit_message_text(chat_id=chatid, text=webhook_text, message_id=messageid)
@@ -41,7 +52,6 @@ async def callbackHandler(call:CallbackQuery):
     #тут action не может быть равен ничему кроме "get"
 
     get_data = data[1]  
-    inline_keyboard=[]
 
     if get_data == 'apartment':
         tenant_id = int(data[2])
@@ -154,7 +164,7 @@ async def nice_sleep(time:int, text:str, message:Message, is_del:bool = True):
     '''
     param: time in seconds
     '''
-    
+    print(1)
     digits_with_emojis = (
     (0, "0️⃣"),  # Ноль
     (1, "1️⃣"),  # Один
