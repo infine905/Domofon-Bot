@@ -1,13 +1,10 @@
 from aiogram import Router
-from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
 
 from .profile import getProfile
-from utils import Domofon, Apartment, Tenant
+from utils import getApartments, getDomofons, openDomofon, getDomofonImage
 
 from asyncio import sleep
-from requests import get, post
-import json
-from io import BytesIO
 
 RouterCallback = Router()
 
@@ -34,8 +31,7 @@ async def callbackHandler(call:CallbackQuery):
         for apartment in apartments:
             apartment_id = apartment.id
             apartment_name = apartment.name
-            
-            
+             
             inline_keyboard.append([
                 InlineKeyboardButton(text=f'{apartment_name}', callback_data=f'get_domofon_{tenant_id}_{apartment_id}')
             ])
@@ -44,7 +40,7 @@ async def callbackHandler(call:CallbackQuery):
             inline_keyboard.append([
                 InlineKeyboardButton(text=f'На главную', callback_data=f'home_{tenant_id}')
             ])
-            mes_text = 'Ваши квартиры'
+            edit_text = 'Ваши квартиры'
             
     elif get_data == 'domofon':
         tenant_id = data[2]
@@ -64,182 +60,72 @@ async def callbackHandler(call:CallbackQuery):
             inline_keyboard.append([
                 InlineKeyboardButton(text=f'На главную', callback_data=f'home_{tenant_id}')
             ])
-            mes_text = 'Ваши домофоны'
+            edit_text = 'Ваши домофоны'
 
     elif get_data == 'door':
         tenant_id = data[2]
         domofon_id = data[3]
         
-        inline_keyboard.append([
-            InlineKeyboardButton(text=f'Открыть домофон', callback_data=f'get_open_{tenant_id}_{domofon_id}')
-        ])
-        inline_keyboard.append([
-            InlineKeyboardButton(text=f'Получить фотографию', callback_data=f'get_img_{tenant_id}_{domofon_id}')
-        ])
-        inline_keyboard.append([
-            InlineKeyboardButton(text=f'На главную', callback_data=f'home_{tenant_id}')
-        ])
-        mes_text = 'Выберите действие'
+        inline_keyboard = returnDoorMenu(inline_keyboard=inline_keyboard, tenant_id=tenant_id, domofon_id=domofon_id)
+        
+        edit_text = 'Выберите действие'
 
     elif get_data == 'open':
         tenant_id = data[2]
         domofon_id = data[3]
-
-        if not openDomofon(domofon_id=domofon_id, tenant_id=tenant_id):
-            mes_text = 'нт'
-
-        await call.message.edit_text(text="Домофон открыт")
+        inline_keyboard = returnDoorMenu(inline_keyboard=inline_keyboard, tenant_id=tenant_id, domofon_id=domofon_id)
         
-        await sleep(3)
-    
-        inline_keyboard.append([
-            InlineKeyboardButton(text=f'Открыть домофон', callback_data=f'get_open_{tenant_id}_{domofon_id}')
-        ])
-        inline_keyboard.append([
-            InlineKeyboardButton(text=f'Получить фотографию', callback_data=f'get_img_{tenant_id}_{domofon_id}')
-        ])
-        inline_keyboard.append([
-            InlineKeyboardButton(text=f'На главную', callback_data=f'home_{tenant_id}')
-        ])
-        mes_text = 'Выберите действие'
-            
-    
+        if not openDomofon(domofon_id=domofon_id, tenant_id=tenant_id): #если домофон не открылся
+            edit_text = 'нт'
+
+        if call.message.photo:                                          # если есть фотка в сообщении
+            await call.message.delete()
+            message = await call.message.answer(text='Домофон открыт')
+            keyboard = InlineKeyboardMarkup(inline_keyboard=inline_keyboard)
+
+            await sleep(3)
+
+            await message.edit_text(text='Выберите действие', reply_markup=keyboard)
+            return
+
+        else:
+            await call.message.edit_text(text="Домофон открыт")
+
+        await sleep(3)        
+
+        edit_text = 'Выберите действие'
+
     elif get_data == 'img':
         tenant_id = data[2]
         domofon_id = data[3]
         
         photo_url = getDomofonImage(domofon_id=domofon_id, tenant_id=tenant_id)
         if photo_url:
-            await call.message.answer_photo(photo=photo_url)
+            inline_keyboard = returnDoorMenu(inline_keyboard=inline_keyboard, tenant_id=tenant_id, domofon_id=domofon_id)
+            await call.message.edit_media(media=InputMediaPhoto(media=photo_url))
+            await call.message.edit_caption(caption='Выберете действие', reply_markup=InlineKeyboardMarkup(inline_keyboard=inline_keyboard))
+            return
+
         else:
             await call.message.answer(text='Камера недоступна')
 
-        inline_keyboard.append([
-            InlineKeyboardButton(text=f'Открыть домофон', callback_data=f'get_open_{tenant_id}_{domofon_id}')
-        ])
-        inline_keyboard.append([
-            InlineKeyboardButton(text=f'Получить фотографию', callback_data=f'get_img_{tenant_id}_{domofon_id}')
-        ])
-        inline_keyboard.append([
-            InlineKeyboardButton(text=f'На главную', callback_data=f'home_{tenant_id}')
-        ])
-        mes_text = 'Выберите действие'
+        returnDoorMenu(tenant_id, domofon_id)
+
+        edit_text = 'Выберите действие'
 
     keyboard = InlineKeyboardMarkup(inline_keyboard=inline_keyboard)
     await call.answer()
-    await call.message.edit_text(text=mes_text, reply_markup=keyboard)
-            
-
-def getDomofons(apartment_id:int, tenant_id:int) -> list[Domofon] | None:
-    url = f"https://domo-dev.profintel.ru/tg-bot/domo.apartment/{apartment_id}/domofon"
-    params  = {
-        "tenant_id" : tenant_id
-    }
-    headers = {
-        'x-api-key': 'SecretToken'
-    }
-
-    request = get(url=url, headers=headers, params=params )
-    
-    if request.status_code != 200:
-        return None
-    
-    content = json.loads(request.content.decode())
-    
-    domofons = []
-    for item in content:
-        id = item['id']
-        name = item['name']
-        address = item['location']['readable_address']
-        domofons.append(Domofon(id, name, address))
-    return domofons
-        
-        
-def getApartments(tenant_id:int) -> list[Apartment] | None:
-    url = "https://domo-dev.profintel.ru/tg-bot/domo.apartment"
-    params  = {
-        "tenant_id": tenant_id
-    }
-    headers = {
-        'x-api-key': 'SecretToken'
-    }
-
-    request = get(url=url, headers=headers, params=params )
-    
-    if request.status_code != 200:
-        return None
-    
-    content = json.loads(request.content.decode())
-    apartments = []
-    for item in content:
-        id = item['id']
-        name = item['name']
-        address = item['location']['readable_address']
-        tenants_data = item.get('tenants', [])
-        tenants = [Tenant(t['id']) for t in tenants_data]
-        apartments.append(Apartment(id, name, address, tenants))
-    return apartments 
+    await call.message.edit_text(text=edit_text, reply_markup=keyboard)
 
 
-def openDomofon(domofon_id:int, tenant_id:int, door_id:int = 0) -> bool:
-    url = f"https://domo-dev.profintel.ru/tg-bot/domo.domofon/{domofon_id}/open"
-    params  = {
-        "tenant_id" : tenant_id
-    }
-    
-    data = {
-        "door_id" : door_id
-    }
-    
-    headers = {
-        'x-api-key': 'SecretToken'
-    }
-
-    request = post(url=url, headers=headers, params=params, json=data)
-    
-    if request.status_code == 200:
-        return True
-    
-    return False
-
-
-def getDomofonImage(domofon_id:int, tenant_id:int, media_type:str="JPEG") -> str | None:
-    url = f"https://domo-dev.profintel.ru/tg-bot/domo.domofon/urlsOnType"
-
-    params  = {
-        "tenant_id" : tenant_id
-    }
-
-    data = {
-        "intercoms_id": [
-            domofon_id
-        ],
-        "media_type": [
-            "JPEG"
-        ]
-    }
-
-    headers = {
-        'x-api-key': 'SecretToken'
-    }
-
-    request = post(url=url, headers=headers, params=params, json=data)
-    
-    if request.status_code != 200:
-        return None
-    
-    request_data = json.loads(request.content)
-    
-    image_url = request_data[0].get("jpeg")
-    image_url_alt = request_data[0].get("alt_jpeg")
-    
-    req_image = get(image_url)
-    if req_image.status_code == 200:
-        return image_url
-    
-    req_image = get(image_url_alt)
-    if req_image.status_code == 200:
-        return  image_url_alt
-    
-    return None
-
+def returnDoorMenu(inline_keyboard:list, tenant_id:int, domofon_id:int):
+    inline_keyboard.append([
+        InlineKeyboardButton(text=f'Открыть домофон', callback_data=f'get_open_{tenant_id}_{domofon_id}')
+    ])
+    inline_keyboard.append([
+        InlineKeyboardButton(text=f'Получить фотографию', callback_data=f'get_img_{tenant_id}_{domofon_id}')
+    ])
+    inline_keyboard.append([
+        InlineKeyboardButton(text=f'На главную', callback_data=f'home_{tenant_id}')
+    ])
+    return inline_keyboard

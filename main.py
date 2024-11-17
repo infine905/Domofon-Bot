@@ -1,12 +1,9 @@
-
-import app
-import os
-
 from config.config import dp, bot
 from asyncio import run
 from time import strftime 
-from utils import set_command
 
+import app
+from utils import set_command
 
 async def main():
     dp.include_routers(
@@ -18,7 +15,6 @@ async def main():
     await dp.start_polling(bot, skip_updates=True)
 
 if __name__ == '__main__':
-    # allmediadir = os.path.join(os.path.dirname(os.path.abspath(__file)), 'all_media')
     now_time = strftime("%H:%M")
     print(f'Bot started at {now_time}')
     run(main()) 
