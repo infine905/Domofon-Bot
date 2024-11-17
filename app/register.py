@@ -23,11 +23,11 @@ async def sendContactFromUser(message:Message) -> None:
 @RouterReg.message(F.contact)
 async def Register(message:Message) -> None:
     if Database().GetOne(data='id', table_name='Users', find_param='tg_id', find_value=message.contact.user_id):
-        await message.answer(text='Ты даун?🤔🤔🤔\nНе ну ты реально даун', reply_markup=ReplyKeyboardRemove())
+        await message.answer(text='😎 Вы уже зарегистрированы', reply_markup=ReplyKeyboardRemove())
         return
     
     if message.from_user.id != message.contact.user_id:
-        await message.answer(text='Ты даун?🤔🤔🤔', reply_markup=ReplyKeyboardRemove())
+        await message.answer(text='😡 Отправьте *свой* контакт', reply_markup=ReplyKeyboardRemove())
         return
 
     phone = message.contact.phone_number.replace(' ', '').replace('+', '')    
@@ -36,7 +36,7 @@ async def Register(message:Message) -> None:
     tenant_id = getTenantIdByPhone(phone=phone)
 
     if tenant_id == False:
-        await message.answer(text='Ты даун?🤔🤔🤔')
+        await message.answer(text='😢 Вы не являетесь участником системы')
         return
 
     if not(Database().AddRow(table_name='users', tg_id=message.from_user.id, tenant_id=tenant_id, phone=phone)):
@@ -44,7 +44,7 @@ async def Register(message:Message) -> None:
         await message.answer(text=text)
         return
 
-    await message.answer(text=f"Вы зарегистрировались", reply_markup=ReplyKeyboardRemove())
+    await message.answer(text=f"🎉 Вы успешно авторизировались", reply_markup=ReplyKeyboardRemove())
 
     await getProfile(message=message, is_start=True)
 
