@@ -1,5 +1,5 @@
 from aiogram import Router
-from aiogram.types import CallbackQuery, Message, InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, InputFile
 
 from .profile import getProfile
 from utils import Domofon, Apartment, Tenant
@@ -7,6 +7,8 @@ from utils import Domofon, Apartment, Tenant
 from asyncio import sleep
 from requests import get, post
 import json
+from io import BytesIO
+
 
 RouterCallback = Router()
 
@@ -111,7 +113,20 @@ async def callbackHandler(call:CallbackQuery):
         tenant_id = data[2]
         domofon_id = data[3]
         
+        image_bytes = getDomofonImage(domofon_id=domofon_id, tenant_id=tenant_id)
         
+        await call.message.answer_photo(photo=image_bytes)
+
+        inline_keyboard.append([
+            InlineKeyboardButton(text=f'Открыть домофон', callback_data=f'get_open_{tenant_id}_{domofon_id}')
+        ])
+        inline_keyboard.append([
+            InlineKeyboardButton(text=f'Получить фотографию', callback_data=f'get_img_{tenant_id}_{domofon_id}')
+        ])
+        inline_keyboard.append([
+            InlineKeyboardButton(text=f'На главную', callback_data=f'home_{tenant_id}')
+        ])
+        mes_text = 'Выберите действие'
 
     keyboard = InlineKeyboardMarkup(inline_keyboard=inline_keyboard)
     await call.answer()
@@ -142,6 +157,7 @@ def getDomofons(apartment_id:int, tenant_id:int) -> list[Domofon] | None:
         domofons.append(Domofon(id, name, address))
     return domofons
         
+        
 def getApartments(tenant_id:int) -> list[Apartment] | None:
     url = "https://domo-dev.profintel.ru/tg-bot/domo.apartment"
     params  = {
@@ -167,13 +183,14 @@ def getApartments(tenant_id:int) -> list[Apartment] | None:
         apartments.append(Apartment(id, name, address, tenants))
     return apartments 
 
-def openDomofon(domofon_id:int, tenant_id:int, door_id:int = 0, is_test:bool=False) -> bool:
+
+def openDomofon(domofon_id:int, tenant_id:int, door_id:int = 0) -> bool:
     url = f"https://domo-dev.profintel.ru/tg-bot/domo.domofon/{domofon_id}/open"
-    data  = {
+    params  = {
         "tenant_id" : tenant_id
     }
     
-    json_data = {
+    data = {
         "door_id" : door_id
     }
     
@@ -181,13 +198,48 @@ def openDomofon(domofon_id:int, tenant_id:int, door_id:int = 0, is_test:bool=Fal
         'x-api-key': 'SecretToken'
     }
 
-    if is_test:
-        return True
-    
-    request = post(url=url, headers=headers, params=data, json=json_data)
+    request = post(url=url, headers=headers, params=params, json=data)
     
     if request.status_code == 200:
         return True
     
     return False
 
+
+def getDomofonImage(domofon_id:int, tenant_id:int, media_type:str="JPEG") -> BytesIO | None:
+    url = f"https://domo-dev.profintel.ru/tg-bot/domo.domofon/urlsOnType"
+
+    params  = {
+        "tenant_id" : tenant_id
+    }
+
+    data = {
+        "intercoms_id": [
+            domofon_id
+        ],
+        "media_type": [
+            "JPEG"
+        ]
+    }
+
+    headers = {
+        'x-api-key': 'SecretToken'
+    }
+
+    request = post(url=url, headers=headers, params=params, json=data)
+    if request.status_code == 200:
+        request_data = json.loads(request.content)
+        image_url = request_data[0].get("jpeg")
+        image_url_alt = request_data[0].get("alt_jpeg")
+        req_image = get(image_url)
+        if req_image.status_code == 200:
+            image_bytes = BytesIO(req_image.content)
+            image_bytes.name = "photo.jpg"
+            return image_bytes.read()
+        else:
+            req_image = get(image_url_alt)
+            if req_image.status_code == 200:
+                image_bytes = BytesIO(req_image.content)
+                image_bytes.name = f"photo_{tenant_id}_{domofon_id}.jpg"
+                return image_bytes.read()
+    return None
