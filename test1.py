@@ -2,42 +2,39 @@ from requests import post, get
 import json
 
 class Tenant():
-    _id = None
+    id = None
     def __init__(self, id:int) -> None:
-        self._id = id
+        self.id = id
         
     def __repr__(self):
-        return f"Tenant(id={self._id})"
-    
-    def getId(self) -> int:
-        return self._id
-
+        return f"Tenant(id={self.id})"
     
 class Apartment():
-    _id = None
-    _name = None
-    _address = None
-    _tenants = None
+    id = None
+    name = None
+    address = None
+    tenants = None
+       
     def __init__(self, id:int, name:str, address:str, tenants:list[Tenant]) -> None:
-        self._id = id
-        self._name = name
-        self._address = address
-        self._tenants = tenants
-        
+        self.id = id
+        self.name = name
+        self.address = address
+        self.tenants = tenants
+      
     def __repr__(self):
-        return f"Apartment(id={self._id}, name='{self._name}', address='{self._address}', tenants={self._tenants})"
+        return f"Apartment(id={self.id}, name='{self.name}', address='{self.address}', tenants={self.tenants})"
     
 class Domofon():
-    _id = None
-    _name = None
-    _address = None
+    id = None
+    name = None
+    address = None
     def __init__(self, id:int, name:str, address:str) -> None:
-        self._id = id
-        self._name = name
-        self._address = address
+        self.id = id
+        self.name = name
+        self.address = address
         
     def __repr__(self):
-        return f"Domofon(id={self._id}, name='{self._name}', address='{self._address}')" 
+        return f"Domofon(id={self.id}, name='{self.name}', address='{self.address}')" 
     
 def getTenantId(phone : int) -> int | None:
     url = "https://domo-dev.profintel.ru/tg-bot/check-tenant"
@@ -128,4 +125,5 @@ def openDomofon(domofon_id:int, tenant_id:int, door_id:int = 0) -> bool:
     if request.status_code == 200:
         return True
     
-    return False    
+    return False
+
