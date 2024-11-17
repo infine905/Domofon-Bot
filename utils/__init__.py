@@ -3,3 +3,4 @@ from .database import Database
 from .FastApi import *
 from .structs import *
 from .webhook import fastapi_app
+from .helpers import Text

@@ -9,12 +9,13 @@ fastapi_app = FastAPI()
 
 # Модель данных для POST запросов
 class RequestModel(BaseModel):
-    tenant_id: list[int]
+    tenant_id: int
     domofon_id: int
     apartment_id: int
     
 class ReturnModel(BaseModel):
     status: str
+    message: str
     
 # Обработка GET запроса
 @fastapi_app.get("/call_domofon/")
@@ -23,19 +24,20 @@ async def handle_get(
     domofon_id: int = Query(..., description="ID домофона"),
     apartment_id: int = Query(..., description="ID квартиры")
 ):
-    await webhookHandler(tenant_id=tenant_id, domofon_id=domofon_id, apartment_id=apartment_id)   
+    result, message = await webhookHandler(tenant_id=tenant_id, domofon_id=domofon_id, apartment_id=apartment_id)   
     return {
-        "status": "success",
+        "status": "success" if result else "error",
+        "message": message
     }
 
 
 # Обработка POST запроса
 @fastapi_app.post("/call_domofon/")
 async def handle_post(data: RequestModel) -> ReturnModel:
-    for tenant in data.tenant_id:
-        await webhookHandler(tenant_id=tenant, domofon_id=data.domofon_id, apartment_id=data.apartment_id)   
+    result, message = await webhookHandler(tenant_id=data.tenant_id, domofon_id=data.domofon_id, apartment_id=data.apartment_id)   
     return {
-        "status": "success",
+        "status": "success" if result else "error",
+        "message": message
     }
 
 

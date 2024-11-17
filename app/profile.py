@@ -11,7 +11,7 @@ async def getProfile(message:Message, is_start:bool = False, user_id:int=None) -
         tenant_id = Database().GetOne(data='tenant_id', table_name='Users', find_param='tg_id', find_value=user_id)
     except Exception as e:
         return 
-    print(tenant_id)
+
     inline_keyboard = [
         [InlineKeyboardButton(text='👀 Мои квартиры', callback_data=f'get_apartment_{tenant_id}')],
     ]
