@@ -38,7 +38,7 @@ async def callbackHandler(call:CallbackQuery):
 
         else:
             inline_keyboard.append([
-                InlineKeyboardButton(text=f'На главную', callback_data=f'home_{tenant_id}')
+                InlineKeyboardButton(text=f'🔙На главную', callback_data=f'home_{tenant_id}')
             ])
             edit_text = 'Ваши квартиры'
             
@@ -58,7 +58,7 @@ async def callbackHandler(call:CallbackQuery):
             
         else:
             inline_keyboard.append([
-                InlineKeyboardButton(text=f'На главную', callback_data=f'home_{tenant_id}')
+                InlineKeyboardButton(text=f'🔙На главную', callback_data=f'home_{tenant_id}')
             ])
             edit_text = 'Ваши домофоны'
 
@@ -126,6 +126,6 @@ def returnDoorMenu(inline_keyboard:list, tenant_id:int, domofon_id:int):
         InlineKeyboardButton(text=f'Получить фотографию', callback_data=f'get_img_{tenant_id}_{domofon_id}')
     ])
     inline_keyboard.append([
-        InlineKeyboardButton(text=f'На главную', callback_data=f'home_{tenant_id}')
+        InlineKeyboardButton(text=f'🔙На главную', callback_data=f'home_{tenant_id}')
     ])
     return inline_keyboard
