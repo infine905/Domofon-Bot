@@ -100,3 +100,18 @@ class Database():
         except Exception as e:
             print('[sql AddRow]', e)
             return False
+        
+    def Delete(self, param, value, table_name):
+        '''
+        DELETE FROM {table_name} WHERE {param} = {value};
+        '''
+        try:
+            command = f'''DELETE FROM {table_name} WHERE {param} = '{value}';'''
+            self.cursor.execute(command)
+            
+            self.conn.commit()
+            return True
+        
+        except Exception as e:
+            print('[sql Delete]', e)
+            return False
