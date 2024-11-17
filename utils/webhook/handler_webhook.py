@@ -13,6 +13,6 @@ async def webhookHandler(tenant_id:int, domofon_id:int, apartment_id:int) -> boo
     
     inline_keyboard = [
         [InlineKeyboardButton(text='Открыть', callback_data=f'webhook_open_{tenant_id}_{domofon_id}_{apartment_id}_{messageid}_{chat_id}')],
-        [InlineKeyboardButton(text='Закрыть', callback_data='')]
+        [InlineKeyboardButton(text='Закрыть', callback_data='delete')]
     ]
-    message = await bot.send_message(chat_id=int(chat_id), text='Вам позвонили', reply_markup=InlineKeyboardMarkup(inline_keyboard=inline_keyboard))
+    await message.edit_text(text='Вам позвонили', reply_markup=InlineKeyboardMarkup(inline_keyboard=inline_keyboard))

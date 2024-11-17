@@ -24,3 +24,7 @@
 
 # for i in range(1,3+1):
 #     print(i)
+
+from utils import Database
+
+Database().AddRow(table_name='users', tg_id=1016825585, tenant_id=22051, phone=79604664266)
