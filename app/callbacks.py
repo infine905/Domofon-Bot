@@ -1,9 +1,8 @@
 from aiogram import Router
-from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
+from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto, Message
 
 from .profile import getProfile
 from utils import getApartments, getDomofons, openDomofon, getDomofonImage
-
 from asyncio import sleep
 
 RouterCallback = Router()
@@ -15,6 +14,10 @@ async def callbackHandler(call:CallbackQuery):
     data = call.data.split('_')
     
     action = data[0]
+    
+    if action == 'delete':
+        await call.message.delete()
+        return
     
     if action == 'home':
         await getProfile(call.message, user_id=call.from_user.id)
@@ -28,13 +31,11 @@ async def callbackHandler(call:CallbackQuery):
         messageid = data[5]
         chatid = data[6]
         
-        webhook_text = '123'
+        webhook_text = '✅ Домофон открыт'
         
         await call.bot.edit_message_text(chat_id=chatid, text=webhook_text, message_id=messageid)
         
-        await nice_sleep(time=3, text=webhook_text, chat_id=chatid, call=call)
-        
-        await getProfile(message=call.message, is_start=True)
+        await nice_sleep(time=3, text=webhook_text, message=call.message)
         return
         
     #тут action не может быть равен ничему кроме "get"
@@ -102,15 +103,14 @@ async def callbackHandler(call:CallbackQuery):
             message = await call.message.answer(text='✅ Домофон открыт')
             keyboard = InlineKeyboardMarkup(inline_keyboard=inline_keyboard)
 
-            await sleep(3)
-
+            await nice_sleep(time=3, text='✅ Домофон открыт', message=message, is_del=False)
+            
             await message.edit_text(text=base_text, reply_markup=keyboard)
             return
 
         else:
             await call.message.edit_text(text='✅ Домофон открыт')
-
-        await sleep(3)        
+            await nice_sleep(time=3, text='✅ Домофон открыт', message=call.message, is_del=False)        
 
         edit_text = base_text
 
@@ -150,7 +150,7 @@ def returnDoorMenu(inline_keyboard:list, tenant_id:int, domofon_id:int):
     return inline_keyboard
 
 
-async def nice_sleep(time:int, text:str, chat_id, call:CallbackQuery):
+async def nice_sleep(time:int, text:str, message:Message, is_del:bool = True):
     '''
     param: time in seconds
     '''
@@ -170,10 +170,14 @@ async def nice_sleep(time:int, text:str, chat_id, call:CallbackQuery):
     try:
         for i in range(1, time+1):
             await sleep(1)
-            await_text = f'{text} {digits_with_emojis[i][1]}'
-            await call.message.edit_text(text=await_text)
-        
+            await_text = f'{text} {digits_with_emojis[time+1-i][1]}'
+            await message.edit_text(text=await_text)
+        else:
+            await sleep(1)
+            if is_del:
+                await message.delete()
         return True
+    
     except Exception as e:
         print(e)
         return False
