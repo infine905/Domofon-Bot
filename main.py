@@ -27,6 +27,5 @@ async def main():
 
 if __name__ == '__main__':
     now_time = strftime("%H:%M")
-    
     print(f'FastApi and Bot started at {now_time}')
     asyncio.run(main())

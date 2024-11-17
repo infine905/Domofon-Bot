@@ -48,9 +48,9 @@ class Database():
         f'SELECT {data} FROM {table_name} WHERE {find_param} = {find_value}'
         '''
         try:
-            query = f'SELECT {data} FROM {table_name} WHERE {find_param} = {find_value}'
+            query = f'SELECT {data} FROM {table_name} WHERE {find_param} = ?'
 
-            self.cursor.execute(query)
+            self.cursor.execute(query, (find_value))
             result = self.cursor.fetchone()
             self.connect.commit()
 

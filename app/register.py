@@ -7,18 +7,16 @@ from utils import Database, getTenantIdByPhone
 
 RouterReg = Router()
 
+text='Отправьте свой контакт'
+
 @RouterReg.message(Command('start'))
 async def sendContactFromUser(message:Message) -> None:
     if Database().GetOne(data='id', table_name='Users', find_param='tg_id', find_value=message.from_user.id):
-        await getProfile(message=message, is_start=True) #Вернет в тг мессагу с профилем
+        await getProfile(message=message, is_start=True)
         return
-    
     else:
-        contact_button = [[KeyboardButton(text="Отправить контакт", request_contact=True)]]
+        contact_button = [[KeyboardButton(text=text, request_contact=True)]]
         keyboard = ReplyKeyboardMarkup(resize_keyboard=True, keyboard=contact_button)
-        
-        text='Отправьте свой контакт'
-        
         await message.answer(text=text, reply_markup=keyboard)
 
 
