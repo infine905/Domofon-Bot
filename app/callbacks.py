@@ -175,5 +175,4 @@ async def nice_sleep(time:int, text:str, chat_id, call:CallbackQuery):
         
         return True
     except Exception as e:
-        print(e)
         return False

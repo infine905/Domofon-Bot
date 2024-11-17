@@ -6,8 +6,6 @@ import asyncio
 
 from .handler_webhook import webhookHandler
 
-print("aboba")
-
 fastapi_app = FastAPI()
 
 # Модель данных для POST запросов
