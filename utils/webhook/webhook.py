@@ -1,8 +1,9 @@
 from flask import Flask, request, jsonify
+from .handler_webhook import webhookHandler
 
-app = Flask(__name__)
+core = Flask(__name__)
 
-@app.route('/', methods=['GET', 'POST'])
+@core.route('/', methods=['GET', 'POST'])
 def process_request():
     if request.method == 'GET':
         tenant_id = request.args.get('tenant_id')
@@ -18,7 +19,11 @@ def process_request():
     if not domofon_id or not tenant_id or not apartment_id:
         return jsonify({'message': 'Missing arguments, tenant_id, domofon_id and apartment_id are required'}), 400
     
+    
+    webhookHandler(tenant_id, domofon_id, apartment_id)
+    
     return jsonify({'message': 'Request processed successfully'}), 200
 
 if __name__ == '__main__':
-    app.run(debug=False)
+    core.run(debug=False)
+    #менять в main.py
